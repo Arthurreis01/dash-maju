@@ -21,15 +21,14 @@ def carregar_dados():
         st.stop()
 
     df = df.set_index("Unnamed: 0")
-    df.index = df.index.str.strip().str.upper()
+    df.index = df.index.str.strip().str.upper()  # Ensure consistency
     return df
 
 # ----------------------------------------------------------------------------
 # 2. CRIAÇÃO DO DASHBOARD COM STREAMLIT
 # ----------------------------------------------------------------------------
 def main():
-    st.title("🌟 Dashboard de Vendas de Brownies - Maju")
-    st.markdown("## 📊 Análise Financeira e de Desempenho")
+    st.title("📊 Análise Financeira e de Desempenho - MajuBrownies")
     st.markdown("---")
 
     df = carregar_dados()
@@ -118,6 +117,7 @@ def main():
         mode="lines",
         line=dict(dash="dash", color="red")
     ))
+
     fig_vendas_lucro.update_layout(
         title="Tendência de Vendas e Lucro Consolidado",
         xaxis_title="Mês",
@@ -127,15 +127,49 @@ def main():
     st.plotly_chart(fig_vendas_lucro, use_container_width=True)
 
     # ----------------------------------------------------------------------------
+    # ANÁLISE DE MARGENS
+    # ----------------------------------------------------------------------------
+    st.markdown("### 📉 Análise de Margens")
+    df_margens = df.loc[["7. MARGEM"]].T
+    df_margens.reset_index(inplace=True)
+    df_margens.columns = ["Mes", "Margem"]
+
+    fig_margens = go.Figure()
+    fig_margens.add_trace(go.Scatter(
+        x=df_margens["Mes"],
+        y=df_margens["Margem"],
+        mode="lines+markers+text",
+        name="Margem (%)",
+        text=df_margens["Margem"],
+        textposition="top center"
+    ))
+
+    fig_margens.update_layout(
+        title="Análise de Margens",
+        xaxis_title="Mês",
+        yaxis_title="Margem (%)",
+        height=600,
+    )
+    st.plotly_chart(fig_margens, use_container_width=True)
+
+    # ----------------------------------------------------------------------------
     # RECEITA DETALHADA
     # ----------------------------------------------------------------------------
     st.markdown("### 📊 Análise Detalhada das Receitas")
-    revenue_lines = ["1.1 VENDA EMPRESA", "1.2 VENDA COELHO", "1.5 VENDA ENCOMENDADAS"]
-    if any(line in df.index for line in revenue_lines):
-        df_revenues = df.loc[revenue_lines].T
-        df_revenues.reset_index(inplace=True)
-        df_revenues.columns = ["Mes"] + revenue_lines
 
+    # Define revenue lines
+    revenue_lines = ["1.1  VENDA EMPRESA", "1.2  VENDA COELHO", "1.5  VENDA ENCOMENDADAS"]
+
+    # Check which lines are present
+    revenues_present = [line for line in revenue_lines if line in df.index]
+
+    if revenues_present:
+        # Filter and prepare data for plotting
+        df_revenues = df.loc[revenues_present].T
+        df_revenues.reset_index(inplace=True)
+        df_revenues.columns = ["Mes"] + revenues_present
+
+        # Create the revenue details chart
         fig_revenues_detail = go.Figure()
         for column in df_revenues.columns[1:]:
             fig_revenues_detail.add_trace(go.Bar(
@@ -157,6 +191,8 @@ def main():
     else:
         st.error("Nenhuma das linhas de receita detalhada foi encontrada no conjunto de dados.")
 
+
+
     # ----------------------------------------------------------------------------
     # DESPESAS DETALHADAS
     # ----------------------------------------------------------------------------
@@ -166,10 +202,11 @@ def main():
         "3.1 MARIANA", "3.2 ADESIVO", "3.3 UBER", "3.4 ALUGUEL DE CARRO",
         "3.5 ÔNIBUS", "3.6 TARIFA BANCO", "3.6 DANS MEI"
     ]
-    if any(line in df.index for line in expense_lines):
-        df_expenses = df.loc[expense_lines].T
+    expenses_present = [line for line in expense_lines if line in df.index]
+    if expenses_present:
+        df_expenses = df.loc[expenses_present].T
         df_expenses.reset_index(inplace=True)
-        df_expenses.columns = ["Mes"] + expense_lines
+        df_expenses.columns = ["Mes"] + expenses_present
 
         fig_expenses_detail = go.Figure()
         for column in df_expenses.columns[1:]:
@@ -191,35 +228,6 @@ def main():
         st.plotly_chart(fig_expenses_detail, use_container_width=True)
     else:
         st.error("Nenhuma das linhas de despesa detalhada foi encontrada no conjunto de dados.")
-
-    # ----------------------------------------------------------------------------
-    # MARGEM DE LUCRO
-    # ----------------------------------------------------------------------------
-    st.markdown("### 📉 Análise de Margens (Bruta e Líquida)")
-    if "7. MARGEM" in df.index:
-        df_margens = df.loc[["7. MARGEM"]].T
-        df_margens.reset_index(inplace=True)
-        df_margens.columns = ["Mes", "Margem"]
-
-        fig_margens = go.Figure()
-        fig_margens.add_trace(go.Scatter(
-            x=df_margens["Mes"],
-            y=df_margens["Margem"],
-            mode="lines+markers+text",
-            name="Margem (%)",
-            text=df_margens["Margem"],
-            textposition="top center"
-        ))
-
-        fig_margens.update_layout(
-            title="Análise de Margens",
-            xaxis_title="Mês",
-            yaxis_title="Margem (%)",
-            height=600,
-        )
-        st.plotly_chart(fig_margens, use_container_width=True)
-    else:
-        st.error("A linha '7. MARGEM' está ausente no conjunto de dados.")
 
     # ----------------------------------------------------------------------------
     # DISPLAY SPREADSHEET
