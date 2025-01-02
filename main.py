@@ -163,15 +163,20 @@ def main():
     # Check which lines are present
     revenues_present = [line for line in revenue_lines if line in df.index]
 
-    if revenues_present:
+    if revenues_present and "7. MARGEM" in df.index:
         # Filter and prepare data for plotting
         df_revenues = df.loc[revenues_present].T
         df_revenues.reset_index(inplace=True)
         df_revenues.columns = ["Mes"] + revenues_present
 
+        # Add the margin line
+        df_revenues["Margem"] = df.loc["7. MARGEM"].values
+
         # Create the revenue details chart
         fig_revenues_detail = go.Figure()
-        for column in df_revenues.columns[1:]:
+
+        # Add bar traces for revenues
+        for column in df_revenues.columns[1:-1]:  # Exclude "Mes" and "Margem"
             fig_revenues_detail.add_trace(go.Bar(
                 x=df_revenues["Mes"],
                 y=df_revenues[column],
@@ -180,16 +185,42 @@ def main():
                 textposition="outside"
             ))
 
+        # Add the margin line with a secondary y-axis
+        fig_revenues_detail.add_trace(go.Scatter(
+            x=df_revenues["Mes"],
+            y=df_revenues["Margem"],
+            mode="lines+markers+text",
+            name="Margem (%)",
+            text=df_revenues["Margem"].apply(lambda x: f"{x:.1%}"),  # Format as percentage
+            textposition="top center",
+            line=dict(color="red", dash="dash", width=3),  # Thicker line for better visibility
+            marker=dict(size=10)  # Larger markers
+        ))
+
+        # Update layout for secondary y-axis
         fig_revenues_detail.update_layout(
-            title="Análise Detalhada das Receitas",
+            title="Análise Detalhada das Receitas com Margem (%)",
             xaxis_title="Mês",
-            yaxis_title="Valor (R$)",
+            yaxis=dict(
+                title="Valor (R$)",
+                titlefont=dict(size=16)
+            ),
+            yaxis2=dict(
+                title="Margem (%)",
+                overlaying="y",
+                side="right",
+                titlefont=dict(size=16)
+            ),
             barmode="stack",
             height=600,
+            font=dict(size=14)
         )
+
         st.plotly_chart(fig_revenues_detail, use_container_width=True)
     else:
-        st.error("Nenhuma das linhas de receita detalhada foi encontrada no conjunto de dados.")
+        st.error("Nenhuma das linhas de receita detalhada ou a linha '7. MARGEM' foi encontrada no conjunto de dados.")
+
+
 
 
 
