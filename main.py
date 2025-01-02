@@ -229,7 +229,7 @@ def main():
     # ----------------------------------------------------------------------------
     st.markdown("### 💰 Análise Detalhada das Despesas")
     expense_lines = [
-        "2.1 DESPESA COM MERCADORIAS", "2.2 DESPESA COM EMBALAGENS", "3. DEPESAS GERAIS E ADMNIST.",
+        "2.1 DESPESA COM MERCADORIAS", "2.2 DESPESA COM EMBALAGENS", 
         "3.1 MARIANA", "3.2 ADESIVO", "3.3 UBER", "3.4 ALUGUEL DE CARRO",
         "3.5 ÔNIBUS", "3.6 TARIFA BANCO", "3.6 DANS MEI"
     ]
